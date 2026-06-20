@@ -11,7 +11,7 @@ import {
   Building2, MessageSquare, HeartHandshake, Briefcase,
   FileText, UserCog, LogOut, Menu, X, Bell, ChevronRight,
 } from "lucide-react";
-import { Loader } from "@/components/ui/Loader";
+import { PageLoader } from "@/components/ui/PageLoader";
 import { GlobalLottie } from "@/components/ui/GlobalLottie";
 
 interface NavItem {
@@ -212,9 +212,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <div className="flex-1 overflow-y-auto p-5 lg:p-8 relative" style={{ scrollbarWidth: "thin", scrollbarColor: "#cbd5e1 transparent" }}>
           <div className="max-w-[1600px] mx-auto">
             {isNavigating ? (
-              <div className="h-[500px] flex items-center justify-center">
-                <Loader message="Loading..." />
-              </div>
+                <PageLoader />
             ) : (
               <motion.div
                 initial={{ opacity: 0, y: 8 }}

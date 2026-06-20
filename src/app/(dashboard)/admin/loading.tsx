@@ -1,9 +1,9 @@
-import { Loader } from "@/components/ui/Loader";
+import { PageLoader } from "@/components/ui/PageLoader";
 
 export default function AdminLoading() {
   return (
     <div className="h-[600px] flex items-center justify-center">
-      <Loader message="Loading page..." />
+      <PageLoader />
     </div>
   );
 }
