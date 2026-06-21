@@ -24,7 +24,7 @@ export function HeroSection() {
   }, [heroImages.length]);
 
   return (
-    <section className="relative min-h-screen lg:h-[100vh] flex items-center pt-32 lg:pt-28 pb-10 overflow-hidden bg-[#0A1220]">
+    <section className="relative min-h-[100vh] flex items-center pt-32 lg:pt-28 pb-32 lg:pb-40 overflow-hidden bg-[#0A1220]">
       {/* Background with subtle dots or gradients */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] rounded-full bg-[#1E3A8A]/30 blur-[120px]" />
@@ -214,6 +214,22 @@ export function HeroSection() {
         </div>
       </div>
       
+      {/* ── BOTTOM WAVE DIVIDER ── */}
+      <div className="absolute bottom-[-1px] left-0 w-full overflow-hidden leading-[0] z-20 pointer-events-none">
+        <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="w-full h-[50px] md:h-[80px] lg:h-[120px]">
+          {/* Subtle back wave */}
+          <path 
+            d="M0,90 C320,150 420,30 720,30 C1020,30 1120,150 1440,90 L1440,120 L0,120 Z" 
+            className="fill-slate-50/10" 
+          />
+          {/* Main front wave matching the next section's background */}
+          <path 
+            d="M0,60 C320,120 420,0 720,0 C1020,0 1120,120 1440,60 L1440,120 L0,120 Z" 
+            className="fill-slate-50" 
+          />
+        </svg>
+      </div>
+
     </section>
   );
 }

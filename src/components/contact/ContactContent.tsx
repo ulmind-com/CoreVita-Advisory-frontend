@@ -1,11 +1,72 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Phone, Mail, MapPin, Send, User, Briefcase, Building, ChevronDown, MessageSquare } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Phone, Mail, MapPin, Send, User, Briefcase, Building, ChevronDown, MessageSquare, Loader2 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import Lottie from "lottie-react";
+import successAnimation from "../../../public/Lottie/Verified Icon Animation.json";
+
+// We use the same hardcoded BASE_URL as admin-api.ts for simplicity
+const isProd = process.env.NODE_ENV === "production";
+const BASE_URL = isProd ? "https://project-for-prem-backend.onrender.com/api/v1" : "http://localhost:8000/api/v1";
 
 export function ContactContent() {
+  const [formData, setFormData] = useState({
+    name: "",
+    designation: "",
+    company: "",
+    email: "",
+    phone: "",
+    service_interest: "",
+    message: ""
+  });
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMsg("");
+
+    try {
+      // Concatenate designation into the message since the backend schema doesn't have a designation field
+      const fullMessage = `[Designation: ${formData.designation}]\n\n${formData.message}`;
+      
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        company: formData.company,
+        service_interest: formData.service_interest,
+        message: fullMessage
+      };
+
+      const res = await fetch(`${BASE_URL}/content/enquiries`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to submit enquiry");
+      }
+
+      setIsSuccess(true);
+    } catch (err) {
+      setErrorMsg("Something went wrong. Please try again later.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-[#061124] selection:bg-sky-500 selection:text-white">
       <Header />
@@ -126,130 +187,202 @@ export function ContactContent() {
               transition={{ delay: 0.4, duration: 0.6 }}
               className="lg:col-span-7"
             >
-              <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-8 md:p-12 shadow-[0_0_50px_rgba(14,165,233,0.05)] relative overflow-hidden">
+              <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-8 md:p-12 shadow-[0_0_50px_rgba(14,165,233,0.05)] relative overflow-hidden min-h-[600px] flex flex-col justify-center">
                 {/* Internal Glow for glassmorphism */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 via-sky-400 to-blue-600" />
                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-sky-500/20 rounded-full blur-[80px] pointer-events-none" />
 
-                <h2 className="text-3xl font-bold text-white mb-2 relative z-10">Send a Message</h2>
-                <p className="text-slate-400 text-sm mb-10 relative z-10">Fill out the form below and our team will get back to you shortly.</p>
+                <AnimatePresence mode="wait">
+                  {!isSuccess ? (
+                    <motion.div 
+                      key="form"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
+                      transition={{ duration: 0.3 }}
+                      className="w-full relative z-10"
+                    >
+                      <h2 className="text-3xl font-bold text-white mb-2">Send a Message</h2>
+                      <p className="text-slate-400 text-sm mb-10">Fill out the form below and our team will get back to you shortly.</p>
 
-                <form className="relative z-10 space-y-6">
-                  {/* Grid for Name & Designation */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-sky-200 uppercase tracking-wider ml-1">Full Name *</label>
-                      <div className="relative">
-                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                        <input 
-                          type="text" 
-                          required
-                          placeholder="John Doe"
-                          className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 focus:bg-sky-400/5 transition-all"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-sky-200 uppercase tracking-wider ml-1">Designation *</label>
-                      <div className="relative">
-                        <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                        <input 
-                          type="text" 
-                          required
-                          placeholder="HR Manager"
-                          className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 focus:bg-sky-400/5 transition-all"
-                        />
-                      </div>
-                    </div>
-                  </div>
+                      {errorMsg && (
+                        <div className="p-4 mb-6 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium">
+                          {errorMsg}
+                        </div>
+                      )}
 
-                  {/* Grid for Company & Email */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-sky-200 uppercase tracking-wider ml-1">Company Name *</label>
-                      <div className="relative">
-                        <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                        <input 
-                          type="text" 
-                          required
-                          placeholder="Acme Corp"
-                          className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 focus:bg-sky-400/5 transition-all"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-sky-200 uppercase tracking-wider ml-1">Email Address *</label>
-                      <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                        <input 
-                          type="email" 
-                          required
-                          placeholder="john@acmecorp.com"
-                          className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 focus:bg-sky-400/5 transition-all"
-                        />
-                      </div>
-                    </div>
-                  </div>
+                      <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Grid for Name & Designation */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold text-sky-200 uppercase tracking-wider ml-1">Full Name *</label>
+                            <div className="relative">
+                              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                              <input 
+                                type="text" 
+                                name="name"
+                                value={formData.name}
+                                onChange={handleChange}
+                                required
+                                placeholder="John Doe"
+                                className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 focus:bg-sky-400/5 transition-all"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold text-sky-200 uppercase tracking-wider ml-1">Designation *</label>
+                            <div className="relative">
+                              <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                              <input 
+                                type="text" 
+                                name="designation"
+                                value={formData.designation}
+                                onChange={handleChange}
+                                required
+                                placeholder="HR Manager"
+                                className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 focus:bg-sky-400/5 transition-all"
+                              />
+                            </div>
+                          </div>
+                        </div>
 
-                  {/* Phone & Service */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-sky-200 uppercase tracking-wider ml-1">Phone Number *</label>
-                      <div className="relative">
-                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                        <input 
-                          type="tel" 
-                          required
-                          placeholder="+91 90000 00000"
-                          className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 focus:bg-sky-400/5 transition-all"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-sky-200 uppercase tracking-wider ml-1">Service Required *</label>
-                      <div className="relative">
-                        <select 
-                          required
-                          defaultValue=""
-                          className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl pl-4 pr-12 text-white appearance-none focus:outline-none focus:border-sky-400 focus:bg-sky-400/5 transition-all cursor-pointer"
+                        {/* Grid for Company & Email */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold text-sky-200 uppercase tracking-wider ml-1">Company Name *</label>
+                            <div className="relative">
+                              <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                              <input 
+                                type="text" 
+                                name="company"
+                                value={formData.company}
+                                onChange={handleChange}
+                                required
+                                placeholder="Acme Corp"
+                                className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 focus:bg-sky-400/5 transition-all"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold text-sky-200 uppercase tracking-wider ml-1">Email Address *</label>
+                            <div className="relative">
+                              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                              <input 
+                                type="email" 
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                                placeholder="john@acmecorp.com"
+                                className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 focus:bg-sky-400/5 transition-all"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Phone & Service */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold text-sky-200 uppercase tracking-wider ml-1">Phone Number *</label>
+                            <div className="relative">
+                              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                              <input 
+                                type="tel" 
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleChange}
+                                required
+                                placeholder="+91 90000 00000"
+                                className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 focus:bg-sky-400/5 transition-all"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold text-sky-200 uppercase tracking-wider ml-1">Service Required *</label>
+                            <div className="relative">
+                              <select 
+                                name="service_interest"
+                                value={formData.service_interest}
+                                onChange={handleChange}
+                                required
+                                className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl pl-4 pr-12 text-white appearance-none focus:outline-none focus:border-sky-400 focus:bg-sky-400/5 transition-all cursor-pointer"
+                              >
+                                <option value="" disabled className="text-slate-800">Select a service</option>
+                                <option value="Permanent Hiring" className="text-slate-800">Permanent Hiring</option>
+                                <option value="Temporary / Contract Staffing" className="text-slate-800">Temporary / Contract Staffing</option>
+                                <option value="Executive Search" className="text-slate-800">Executive Search</option>
+                                <option value="Business Advisory" className="text-slate-800">Business Advisory</option>
+                                <option value="Other Services" className="text-slate-800">Other Services</option>
+                              </select>
+                              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Message */}
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-sky-200 uppercase tracking-wider ml-1">Message</label>
+                          <div className="relative">
+                            <MessageSquare className="absolute left-4 top-5 w-5 h-5 text-slate-400" />
+                            <textarea 
+                              name="message"
+                              value={formData.message}
+                              onChange={handleChange}
+                              rows={4}
+                              placeholder="How can we help you?"
+                              className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 focus:bg-sky-400/5 transition-all resize-none"
+                            ></textarea>
+                          </div>
+                        </div>
+
+                        {/* Submit Button */}
+                        <button 
+                          type="submit" 
+                          disabled={isSubmitting}
+                          className="w-full h-14 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold text-lg hover:shadow-[0_0_30px_rgba(14,165,233,0.4)] transition-all flex items-center justify-center gap-2 group mt-4 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
-                          <option value="" disabled className="text-slate-800">Select a service</option>
-                          <option value="permanent" className="text-slate-800">Permanent Hiring</option>
-                          <option value="temporary" className="text-slate-800">Temporary / Contract Staffing</option>
-                          <option value="executive" className="text-slate-800">Executive Search</option>
-                          <option value="advisory" className="text-slate-800">Business Advisory</option>
-                          <option value="other" className="text-slate-800">Other Services</option>
-                        </select>
-                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                          {isSubmitting ? (
+                            <Loader2 className="w-6 h-6 animate-spin" />
+                          ) : (
+                            <>
+                              Submit Inquiry 
+                              <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                            </>
+                          )}
+                        </button>
+                      </form>
+                    </motion.div>
+                  ) : (
+                    <motion.div 
+                      key="success"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ type: "spring", damping: 20, stiffness: 100 }}
+                      className="w-full h-full flex flex-col items-center justify-center text-center relative z-10"
+                    >
+                      <div className="w-64 h-64 mb-8">
+                        <Lottie animationData={successAnimation} loop={false} />
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Message */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-sky-200 uppercase tracking-wider ml-1">Message</label>
-                    <div className="relative">
-                      <MessageSquare className="absolute left-4 top-5 w-5 h-5 text-slate-400" />
-                      <textarea 
-                        rows={4}
-                        placeholder="How can we help you?"
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 focus:bg-sky-400/5 transition-all resize-none"
-                      ></textarea>
-                    </div>
-                  </div>
-
-                  {/* Submit Button */}
-                  <button 
-                    type="button" 
-                    className="w-full h-14 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold text-lg hover:shadow-[0_0_30px_rgba(14,165,233,0.4)] transition-all flex items-center justify-center gap-2 group mt-4"
-                  >
-                    Submit Inquiry 
-                    <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                  </button>
-                </form>
+                      <h2 className="text-3xl font-black text-white mb-4">Request Sent Successfully!</h2>
+                      <p className="text-sky-200/80 text-lg max-w-sm mx-auto leading-relaxed">
+                        Thank you for reaching out, {formData.name.split(" ")[0]}. Our team will review your details and get back to you shortly.
+                      </p>
+                      
+                      <button 
+                        onClick={() => {
+                          setFormData({ name: "", designation: "", company: "", email: "", phone: "", service_interest: "", message: "" });
+                          setIsSuccess(false);
+                        }}
+                        className="mt-10 px-8 py-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white font-semibold transition-all"
+                      >
+                        Send Another Message
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </motion.div>
           </div>
