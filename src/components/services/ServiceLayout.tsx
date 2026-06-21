@@ -101,7 +101,7 @@ export function ServiceLayout({
             </div>
           </section>
         ) : (
-          <section className="relative min-h-[90vh] flex items-center pt-28 pb-16 overflow-hidden">
+          <section className="relative min-h-[90vh] flex items-center pt-28 pb-32 lg:pb-40 overflow-hidden">
           {/* Background blobs */}
           <div className="absolute inset-0 pointer-events-none">
             <motion.div
@@ -252,6 +252,22 @@ export function ServiceLayout({
               </motion.div>
 
             </div>
+          </div>
+
+          {/* ── BOTTOM WAVE DIVIDER ── */}
+          <div className="absolute bottom-[-1px] left-0 w-full overflow-hidden leading-[0] z-20 pointer-events-none">
+            <svg viewBox="0 0 1440 200" preserveAspectRatio="none" className="w-full h-[80px] md:h-[120px] lg:h-[180px]">
+              {/* 1. Yellow Ribbon (Top Right) */}
+              <path d="M0,150 C400,230 1000,10 1440,30 L1440,200 L0,200 Z" className="fill-[#FFC107]" />
+              {/* 2. Vibrant Blue Ribbon */}
+              <path d="M0,80 C400,160 1000,40 1440,60 L1440,200 L0,200 Z" className="fill-[#0047AB]" />
+              {/* 3. White Gap */}
+              <path d="M0,110 C400,190 1000,70 1440,90 L1440,200 L0,200 Z" className="fill-white" />
+              {/* 4. Orange Ribbon (Bottom Left) */}
+              <path d="M0,125 C400,205 1000,100 1440,120 L1440,200 L0,200 Z" className="fill-[#FF4500]" />
+              {/* 5. Final White Base */}
+              <path d="M0,165 C400,245 1000,70 1440,90 L1440,200 L0,200 Z" className="fill-white" />
+            </svg>
           </div>
         </section>
         )}
