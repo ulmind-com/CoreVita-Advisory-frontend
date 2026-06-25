@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  distDir: "dist",
   devIndicators: false,
   images: {
     qualities: [75, 90, 100],
